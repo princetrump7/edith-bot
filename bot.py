@@ -6,8 +6,6 @@ Entry point. Registers all handlers and starts polling or webhook.
 
 import logging
 import sys
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from telegram import Update
 from telegram.ext import (
@@ -138,29 +136,8 @@ async def _post_init(app: Application) -> None:
 # Run modes
 # ---------------------------------------------------------------------------
 
-class _HealthHandler(BaseHTTPRequestHandler):
-    """Minimal health-check endpoint so Render sees an open port."""
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"ok")
-    def log_message(self, *a):
-        pass  # silence HTTP log spam
-
-
-def _start_health_server():
-    """Bind PORT so Render doesn't kill the process."""
-    server = HTTPServer(("0.0.0.0", PORT), _HealthHandler)
-    logger.info("Health server listening on port %s", PORT)
-    server.serve_forever()
-
-
 def run_polling():
-    """Run in long-polling mode — also starts a health server for Render."""
-    t = threading.Thread(target=_start_health_server, daemon=True)
-    t.start()
-
+    """Run in long-polling mode (local development)."""
     app = build_application()
     logger.info("Starting polling mode...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
@@ -191,7 +168,7 @@ def run_webhook():
 if __name__ == "__main__":
     import os
 
-    mode = os.getenv("BOT_MODE", "polling").lower()
+    mode = os.getenv("BOT_MODE", "webhook").lower()
     if mode == "webhook":
         run_webhook()
     else:
