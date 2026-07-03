@@ -151,7 +151,7 @@ def run_webhook():
         return
 
     app = build_application()
-    logger.info("Starting webhook mode on port %s...", PORT)
+    logger.info("Starting webhook mode on port %s with URL %s...", PORT, APP_URL)
     app.run_webhook(
         listen="0.0.0.0",
         port=PORT,

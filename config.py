@@ -17,7 +17,7 @@ AI_BASE_URL = os.getenv("AI_BASE_URL", "https://opencode.ai/zen/v1")
 AI_MODEL = os.getenv("AI_MODEL", "deepseek-v4-flash")
 
 # --- Deployment ---
-APP_URL = os.getenv("APP_URL", "")  # public URL for webhook mode
+APP_URL = os.getenv("APP_URL", os.getenv("RENDER_EXTERNAL_URL", ""))  # public URL for webhook mode
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "")
 PORT = int(os.getenv("PORT", "8080"))
 
