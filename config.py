@@ -9,12 +9,12 @@ load_dotenv()
 
 # --- Telegram ---
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-BOT_USERNAME = os.getenv("BOT_USERNAME", "mira_bot")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "edith_bot")
 
-# --- AI Provider (OPENCODE / DeepSeek) ---
+# --- AI Provider (OpenCode Zen) ---
 AI_API_KEY = os.getenv("AI_API_KEY", "")
-AI_BASE_URL = os.getenv("AI_BASE_URL", "https://api.opencode.ai/v1")
-AI_MODEL = os.getenv("AI_MODEL", "deepseek-chat")  # proxied by OPENCODE
+AI_BASE_URL = os.getenv("AI_BASE_URL", "https://opencode.ai/zen/v1")
+AI_MODEL = os.getenv("AI_MODEL", "deepseek-v4-flash")
 
 # --- Deployment ---
 APP_URL = os.getenv("APP_URL", "")  # public URL for webhook mode
