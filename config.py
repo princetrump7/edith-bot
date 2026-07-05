@@ -14,7 +14,7 @@ BOT_USERNAME = os.getenv("BOT_USERNAME", "edith_bot")
 # --- AI Provider (Google Gemini — free tier) ---
 AI_API_KEY = os.getenv("AI_API_KEY", "")
 AI_BASE_URL = os.getenv("AI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
-AI_MODEL = os.getenv("AI_MODEL", "gemini-1.5-flash")
+AI_MODEL = os.getenv("AI_MODEL", "gemini-2.5-flash")
 
 # --- Deployment ---
 APP_URL = os.getenv("APP_URL", os.getenv("RENDER_EXTERNAL_URL", ""))  # public URL for webhook mode
