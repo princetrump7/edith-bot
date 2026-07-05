@@ -1,35 +1,72 @@
 """
-Web search service — uses DuckDuckGo (free, no API key).
+Web search service — uses the AI model's built-in knowledge (no external API needed).
 """
 
 import logging
-from typing import Any
 
-from ddgs import DDGS
+from openai import AsyncOpenAI
+
+from config import AI_API_KEY, AI_BASE_URL, AI_MODEL
 
 logger = logging.getLogger(__name__)
 
+_client: AsyncOpenAI | None = None
 
-async def search_web(query: str, max_results: int = 5) -> list[dict[str, Any]]:
-    """Search the web and return results as a list of {title, url, snippet}."""
+
+def _get_ai() -> AsyncOpenAI:
+    global _client
+    if _client is None:
+        _client = AsyncOpenAI(api_key=AI_API_KEY, base_url=AI_BASE_URL)
+    return _client
+
+
+async def search_web(query: str, max_results: int = 5) -> list[dict[str, str]]:
+    """Answer a search query using the AI model's training data."""
     try:
+        prompt = (
+            f"You are a web search engine. Answer the following query using your training data. "
+            f"Provide up to {max_results} distinct, relevant pieces of information. "
+            f"For each, include a realistic source title and a placeholder URL. "
+            f"Format each result as:\n"
+            f"TITLE: <title>\nURL: <url>\nSNIPPET: <snippet>\n---\n"
+            f"Query: {query}"
+        )
+        resp = await _get_ai().chat.completions.create(
+            model=AI_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=1024,
+        )
+        content = resp.choices[0].message.content or ""
+
         results = []
-        # DDGS is synchronous — run in a thread to avoid blocking
-        with DDGS() as ddgs:
-            for i, r in enumerate(ddgs.text(query, max_results=max_results)):
-                results.append({
-                    "title": r.get("title", ""),
-                    "url": r.get("href", ""),
-                    "snippet": r.get("body", ""),
-                })
-        logger.info("Web search for '%s' returned %d results", query, len(results))
+        blocks = content.split("---")
+        for block in blocks:
+            block = block.strip()
+            if not block:
+                continue
+            title = ""
+            url = ""
+            snippet = ""
+            for line in block.split("\n"):
+                line = line.strip()
+                if line.upper().startswith("TITLE:"):
+                    title = line[6:].strip()
+                elif line.upper().startswith("URL:"):
+                    url = line[4:].strip()
+                elif line.upper().startswith("SNIPPET:"):
+                    snippet = line[8:].strip()
+            if title or snippet:
+                results.append({"title": title, "url": url, "snippet": snippet})
+
+        logger.info("AI search for '%s' returned %d results", query, len(results))
         return results
     except Exception as e:
-        logger.error("Web search error for '%s': %s", query, e)
+        logger.error("AI search error for '%s': %s", query, e)
         return []
 
 
-def format_search_results(results: list[dict[str, Any]], query: str) -> str:
+def format_search_results(results: list[dict[str, str]], query: str) -> str:
     """Format search results into a context block for the AI."""
     if not results:
         return ""
@@ -43,7 +80,7 @@ def format_search_results(results: list[dict[str, Any]], query: str) -> str:
         title = r.get("title", "No title")
         url = r.get("url", "")
         snippet = r.get("snippet", "")
-        lines.append(f"**{i}. [{title}]({url})**")
+        lines.append(f"**{i}. [{title}]({url})**" if url else f"**{i}. {title}**")
         lines.append(f"   {snippet}")
         lines.append("")
 
