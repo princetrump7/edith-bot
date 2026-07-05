@@ -22,6 +22,7 @@ from services.tool_service import (
     extract_urls,
     current_time,
 )
+from services.search_service import search_web, format_search_results
 from utils.helpers import split_long_message, extract_reply_text, format_usage
 
 logger = logging.getLogger(__name__)
@@ -159,3 +160,37 @@ async def cmd_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     result = current_time()
     await update.effective_message.reply_text(result, parse_mode="Markdown")
+
+
+async def cmd_web(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Search the web — /web <query>"""
+    query = await _get_input(update, context)
+    if not query:
+        await update.effective_message.reply_text(
+            "⚠️ Usage: `/web <search query>`\n\n"
+            "Example: `/web latest AI news 2026`",
+            parse_mode="Markdown",
+        )
+        return
+
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    await update.effective_message.reply_text(
+        f"🔍 **Searching the web for:** _{query}_\n\n_Give me a moment..._",
+        parse_mode="Markdown",
+    )
+
+    results = await search_web(query)
+    if not results:
+        await update.effective_message.reply_text(
+            "😕 **No results found.** Try a different search term.",
+            parse_mode="Markdown",
+        )
+        return
+
+    formatted = format_search_results(results, query)
+
+    # If the search is short enough, also get the AI to summarize it
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+
+    for chunk in split_long_message(formatted):
+        await update.effective_message.reply_text(chunk, parse_mode="Markdown", disable_web_page_preview=False)

@@ -211,10 +211,13 @@ TOOL_CATEGORIES: dict[str, list[dict[str, Any]]] = {
         {"name": "debug", "desc": "Debug & review code", "usage": "/debug <code>"},
         {"name": "format", "desc": "Format code", "usage": "/format <code>"},
     ],
+    "🌐 Web & Info": [
+        {"name": "web", "desc": "Search the web (live results)", "usage": "/web <query>"},
+        {"name": "time", "desc": "Current time info", "usage": "/time"},
+    ],
     "📊 Utilities": [
         {"name": "wordcount", "desc": "Word & character count", "usage": "/wordcount <text>"},
         {"name": "extracturls", "desc": "Extract URLs from text", "usage": "/extracturls <text>"},
-        {"name": "time", "desc": "Current time info", "usage": "/time"},
     ],
 }
 

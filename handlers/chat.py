@@ -1,6 +1,7 @@
 """
 AI Chat handler — handles free-form text messages by routing them to the AI.
 Supports streaming reply, image descriptions (without generating), and context.
+Auto-injects web search results for queries that need current info.
 """
 
 import logging
@@ -9,6 +10,7 @@ from telegram import Update, Message
 from telegram.ext import ContextTypes, filters
 
 from services.ai_service import chat_completion
+from services.search_service import search_web, format_search_results, needs_web_search
 from config import BOT_NAME
 from utils.helpers import split_long_message, extract_reply_text
 
@@ -58,6 +60,18 @@ async def handle_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     # Send typing indicator
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+
+    # Auto-search the web if the query seems to need current info
+    if needs_web_search(text):
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+        results = await search_web(text)
+        if results:
+            search_context = format_search_results(results, text)
+            # Inject search results into the user query
+            user_content = (
+                f"{search_context}\n\n"
+                f"Based on the above search results AND your own knowledge, answer:\n\n{text}"
+            )
 
     # Get AI response
     history = _get_history(user_id)

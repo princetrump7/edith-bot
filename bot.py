@@ -36,6 +36,7 @@ from handlers.tools import (
     cmd_wordcount,
     cmd_extracturls,
     cmd_time,
+    cmd_web,
 )
 from handlers.settings import cmd_settings, cmd_profile, settings_callback
 from handlers.help_handler import cmd_start, cmd_help, cmd_about
@@ -110,6 +111,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("wordcount", cmd_wordcount))
     app.add_handler(CommandHandler("extracturls", cmd_extracturls))
     app.add_handler(CommandHandler("time", cmd_time))
+    app.add_handler(CommandHandler("web", cmd_web))
 
     # Settings & profile
     app.add_handler(CommandHandler("settings", cmd_settings))
