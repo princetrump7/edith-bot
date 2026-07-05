@@ -29,14 +29,15 @@ from handlers.tools import (
     cmd_summarize,
     cmd_translate,
     cmd_grammar,
-    cmd_sentiment,
     cmd_explain,
     cmd_debug,
-    cmd_format,
-    cmd_wordcount,
-    cmd_extracturls,
-    cmd_time,
     cmd_web,
+    cmd_decide,
+    cmd_negotiate,
+    cmd_whatif,
+    cmd_brief,
+    cmd_remember,
+    cmd_recap,
 )
 from handlers.settings import cmd_settings, cmd_profile, settings_callback
 from handlers.help_handler import cmd_start, cmd_help, cmd_about
@@ -100,17 +101,22 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("summarize", cmd_summarize))
     app.add_handler(CommandHandler("translate", cmd_translate))
     app.add_handler(CommandHandler("grammar", cmd_grammar))
-    app.add_handler(CommandHandler("sentiment", cmd_sentiment))
 
     # Code tools
     app.add_handler(CommandHandler("explain", cmd_explain))
     app.add_handler(CommandHandler("debug", cmd_debug))
-    app.add_handler(CommandHandler("format", cmd_format))
 
-    # Utilities
-    app.add_handler(CommandHandler("wordcount", cmd_wordcount))
-    app.add_handler(CommandHandler("extracturls", cmd_extracturls))
-    app.add_handler(CommandHandler("time", cmd_time))
+    # Strategy tools
+    app.add_handler(CommandHandler("decide", cmd_decide))
+    app.add_handler(CommandHandler("negotiate", cmd_negotiate))
+    app.add_handler(CommandHandler("whatif", cmd_whatif))
+    app.add_handler(CommandHandler("brief", cmd_brief))
+
+    # Memory tools
+    app.add_handler(CommandHandler("remember", cmd_remember))
+    app.add_handler(CommandHandler("recap", cmd_recap))
+
+    # Web search
     app.add_handler(CommandHandler("web", cmd_web))
 
     # Settings & profile

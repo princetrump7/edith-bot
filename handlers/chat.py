@@ -11,6 +11,7 @@ from telegram.ext import ContextTypes, filters
 
 from services.ai_service import chat_completion
 from services.search_service import search_web, format_search_results, needs_web_search
+from services.memory import get_user_summary
 from config import BOT_NAME
 from utils.helpers import split_long_message, extract_reply_text
 
@@ -57,6 +58,11 @@ async def handle_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             f"\"{reply_text[:500]}\"\n\n"
             f"---\n{text}]"
         )
+
+    # Inject what Edith knows about this user
+    memory_context = get_user_summary(user_id)
+    if memory_context:
+        user_content = f"{memory_context}\n\n---\n\n{user_content}"
 
     # Send typing indicator
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")

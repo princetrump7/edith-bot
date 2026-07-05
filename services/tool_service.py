@@ -200,24 +200,27 @@ def current_time(timezone: str = "UTC") -> str:
 # ---------------------------------------------------------------------------
 
 TOOL_CATEGORIES: dict[str, list[dict[str, Any]]] = {
+    "🧠 Strategy": [
+        {"name": "decide", "desc": "Structured decision analysis", "usage": "/decide <question>? <options>"},
+        {"name": "negotiate", "desc": "Negotiation prep & leverage map", "usage": "/negotiate <situation>"},
+        {"name": "whatif", "desc": "Scenario modeling", "usage": "/whatif <scenario>"},
+        {"name": "brief", "desc": "Daily strategic brief", "usage": "/brief"},
+    ],
+    "💾 Memory": [
+        {"name": "remember", "desc": "Tell Edith something to remember", "usage": "/remember <fact>"},
+        {"name": "recap", "desc": "What Edith knows about you", "usage": "/recap"},
+    ],
+    "🌐 Web & Info": [
+        {"name": "web", "desc": "Search the web (live results)", "usage": "/web <query>"},
+    ],
     "📝 Text Analysis": [
         {"name": "summarize", "desc": "Summarize text", "usage": "/summarize <text>"},
         {"name": "translate", "desc": "Translate text", "usage": "/translate <lang> <text>"},
         {"name": "grammar", "desc": "Check grammar & style", "usage": "/grammar <text>"},
-        {"name": "sentiment", "desc": "Analyze sentiment", "usage": "/sentiment <text>"},
     ],
     "💻 Code Tools": [
         {"name": "explain", "desc": "Explain code", "usage": "/explain <code>"},
         {"name": "debug", "desc": "Debug & review code", "usage": "/debug <code>"},
-        {"name": "format", "desc": "Format code", "usage": "/format <code>"},
-    ],
-    "🌐 Web & Info": [
-        {"name": "web", "desc": "Search the web (live results)", "usage": "/web <query>"},
-        {"name": "time", "desc": "Current time info", "usage": "/time"},
-    ],
-    "📊 Utilities": [
-        {"name": "wordcount", "desc": "Word & character count", "usage": "/wordcount <text>"},
-        {"name": "extracturls", "desc": "Extract URLs from text", "usage": "/extracturls <text>"},
     ],
 }
 
