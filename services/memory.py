@@ -1,103 +1,105 @@
 """
-Persistent user memory — stores facts, decisions, and preferences per user.
-Persists across sessions via a JSON file.
+User memory — stores facts, decisions, and profiles via the SQLite persistence layer.
+
+All functions keep their existing public signatures so callers in handlers and
+tools require no changes.  The implementation has been migrated from JSON files
+to the ``persistence`` module so data survives restarts.
 """
 
-import json
 import logging
-import os
-from datetime import datetime
 from typing import Any
 
-MEMORY_FILE = "edith_memory.json"
+from persistence import (
+    get_facts,
+    get_decisions,
+    save_fact,
+    save_decision,
+    clear_all_facts,
+    get_profile,
+    upsert_profile,
+)
+
 logger = logging.getLogger(__name__)
-
-
-def _load() -> dict[str, Any]:
-    if os.path.exists(MEMORY_FILE):
-        try:
-            with open(MEMORY_FILE, encoding="utf-8") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, OSError) as e:
-            logger.error("Failed to load memory file: %s", e)
-            return {}
-    return {}
-
-
-def _save(data: dict[str, Any]) -> None:
-    try:
-        with open(MEMORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-    except OSError as e:
-        logger.error("Failed to save memory file: %s", e)
-
-
-def _ensure_user(uid: str) -> dict:
-    data = _load()
-    if uid not in data:
-        data[uid] = {
-            "facts": [],
-            "decisions": [],
-            "briefs_sent": [],
-            "created": datetime.utcnow().isoformat(),
-        }
-        _save(data)
-    return data
 
 
 # ---------------------------------------------------------------------------
 # Facts
 # ---------------------------------------------------------------------------
 
+
 def add_fact(user_id: int, fact: str) -> None:
-    """Store a fact Edith knows about this user."""
-    uid = str(user_id)
-    data = _ensure_user(uid)
-    data = _load()
-    data[uid]["facts"].append({
-        "text": fact,
-        "timestamp": datetime.utcnow().isoformat(),
-    })
-    # Keep last 50 facts max
-    data[uid]["facts"] = data[uid]["facts"][-50:]
-    _save(data)
+    """Store a fact Edith knows about this user.
+
+    Args:
+        user_id: Telegram user ID.
+        fact: The fact text to remember.
+    """
+    save_fact(user_id, fact)
 
 
 def clear_facts(user_id: int) -> None:
-    """Clear all facts for a user."""
-    uid = str(user_id)
-    data = _load()
-    if uid in data:
-        data[uid]["facts"] = []
-        data[uid]["decisions"] = []
-        _save(data)
+    """Delete all stored facts for a user.
+
+    Args:
+        user_id: Telegram user ID.
+    """
+    clear_all_facts(user_id)
+    logger.info("Facts cleared for user %s", user_id)
 
 
-def get_user_profile(user_id: int) -> dict:
-    """Get full user profile."""
-    uid = str(user_id)
-    data = _load()
-    return data.get(uid, {"facts": [], "decisions": []})
+def get_user_profile(user_id: int) -> dict[str, Any]:
+    """Return the full user profile (facts and decisions).
+
+    Args:
+        user_id: Telegram user ID.
+
+    Returns:
+        Dict with ``facts`` and ``decisions`` keys, each a list of records.
+    """
+    facts = get_facts(user_id)
+    decisions = get_decisions(user_id)
+    db_profile = get_profile(user_id)
+    return {
+        "facts": [{"text": f["text"], "timestamp": f.get("created_at", "")} for f in facts],
+        "decisions": [
+            {
+                "question": d["question"],
+                "outcome": d.get("summary", ""),
+                "timestamp": d.get("created_at", ""),
+            }
+            for d in decisions
+        ],
+        "preferences": (db_profile or {}).get("preferences", "{}"),
+    }
 
 
 def get_user_summary(user_id: int) -> str:
-    """Format what Edith knows as a context block for the system prompt."""
-    prof = get_user_profile(user_id)
-    lines = []
+    """Format what Edith knows as a context block for the system prompt.
 
-    if prof.get("facts"):
+    Args:
+        user_id: Telegram user ID.
+
+    Returns:
+        A plain-text string suitable for prepending to an AI prompt, or an
+        empty string if nothing is known about the user.
+    """
+    facts = get_facts(user_id)
+    decisions = get_decisions(user_id)
+
+    lines: list[str] = []
+
+    if facts:
         lines.append("[EDITH'S MEMORY OF THIS USER]")
-        for f in prof["facts"][-10:]:
+        for f in facts[:10]:
             lines.append(f"  • {f['text']}")
 
-    if prof.get("decisions"):
+    if decisions:
         if not lines:
             lines.append("[EDITH'S MEMORY OF THIS USER]")
         lines.append("  Previous decisions analyzed:")
-        for d in prof["decisions"][-5:]:
+        for d in decisions[:5]:
             q = d.get("question", "")[:80]
-            o = d.get("outcome", "")[:60]
-            lines.append(f"  • Decided: {q} → {o}")
+            lines.append(f"  • Decided: {q}")
 
     return "\n".join(lines)
 
@@ -106,15 +108,13 @@ def get_user_summary(user_id: int) -> str:
 # Decisions
 # ---------------------------------------------------------------------------
 
+
 def add_decision(user_id: int, question: str, outcome: str) -> None:
-    """Log a decision analysis."""
-    uid = str(user_id)
-    _ensure_user(uid)
-    data = _load()
-    data[uid]["decisions"].append({
-        "question": question,
-        "outcome": outcome,
-        "timestamp": datetime.utcnow().isoformat(),
-    })
-    data[uid]["decisions"] = data[uid]["decisions"][-20:]
-    _save(data)
+    """Log a decision analysis that was performed for this user.
+
+    Args:
+        user_id: Telegram user ID.
+        question: The decision question that was analysed.
+        outcome: Summary of the recommendation or outcome.
+    """
+    save_decision(user_id, question, outcome)

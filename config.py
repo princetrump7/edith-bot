@@ -13,9 +13,10 @@ BOT_USERNAME = os.getenv("BOT_USERNAME", "edith_bot")
 
 # --- AI Provider (Groq — free tier) ---
 # Get a free API key at https://console.groq.com/keys (no credit card needed)
-AI_API_KEY = os.getenv("AI_API_KEY", "")
+# GROQ_API_KEY takes precedence over AI_API_KEY for backward compatibility.
+AI_API_KEY = os.getenv("GROQ_API_KEY") or os.getenv("AI_API_KEY", "")
 AI_BASE_URL = os.getenv("AI_BASE_URL", "https://api.groq.com/openai/v1")
-AI_MODEL = os.getenv("AI_MODEL", "openai/gpt-oss-120b")
+AI_MODEL = os.getenv("AI_MODEL", "llama-3.3-70b-versatile")
 
 # --- Deployment ---
 APP_URL = os.getenv("APP_URL", os.getenv("RENDER_EXTERNAL_URL", ""))  # public URL for webhook mode
