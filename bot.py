@@ -45,6 +45,7 @@ from handlers.tools import (
 )
 from handlers.settings import cmd_settings, cmd_profile, settings_callback
 from handlers.help_handler import cmd_start, cmd_help, cmd_about
+from handlers.screens_handler import cmd_showcase, cmd_collage
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -167,6 +168,10 @@ def build_application() -> Application:
     # Settings & profile
     app.add_handler(CommandHandler("settings", cmd_settings))
     app.add_handler(CommandHandler("profile", cmd_profile))
+
+    # Showcase screens
+    app.add_handler(CommandHandler("showcase", cmd_showcase))
+    app.add_handler(CommandHandler("collage", cmd_collage))
 
     # Inline callbacks (settings menu)
     app.add_handler(

@@ -19,6 +19,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f"**What I can do:**\n"
         f"💬 **Chat** — Just send me a message to chat\n"
         f"🛠️ **Tools** — `/tools` to see all utilities\n"
+        f"🎨 **Showcase** — `/showcase` for a visual tour\n"
         f"📝 **Analyze** — `/summarize`, `/translate`, `/grammar`\n"
         f"💻 **Code** — `/explain`, `/debug`\n"
         f"⚙️ **Settings** — `/settings` to customize me\n\n"
