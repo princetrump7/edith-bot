@@ -1,10 +1,8 @@
-"""
-AI Chat handler — routes free-form messages and photos to the AI with persistence and vision.
+"""AI Chat handler — routes free-form messages and photos to the AI with persistence and vision.
 
 Key behaviours:
 - Chat history is stored in SQLite (via persistence module).
 - Images are analysed in real time using Groq's vision model.
-- Web search is auto-triggered for queries that need current information.
 - User memory context is injected before every AI call.
 """
 
@@ -20,7 +18,6 @@ from persistence import (
     clear_conversations,
 )
 from services.ai_service import chat_completion, vision_analysis
-from services.search_service import search_web, format_search_results, needs_web_search
 from services.memory import get_user_summary
 from config import BOT_NAME
 from utils.helpers import split_long_message, extract_reply_text
@@ -31,8 +28,8 @@ logger = logging.getLogger(__name__)
 async def handle_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle free-form text messages (not commands).
 
-    Loads conversation history from the database, injects user memory and
-    optional web search results, sends to the AI, then persists the exchange.
+    Loads conversation history from the database, injects user memory,
+    sends to the AI, then persists the exchange.
     """
     user = update.effective_user
     message = update.effective_message
@@ -58,17 +55,6 @@ async def handle_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         user_content = f"{memory_context}\n\n---\n\n{user_content}"
 
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-
-    # Auto-search the web for time-sensitive queries
-    if needs_web_search(text):
-        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-        results = await search_web(text)
-        if results:
-            search_context = format_search_results(results, text)
-            user_content = (
-                f"{search_context}\n\n"
-                f"Based on the above search results AND your own knowledge, answer:\n\n{text}"
-            )
 
     # Load chat history from DB and send to AI
     history = get_conversation_history(user_id)
